@@ -38,11 +38,10 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
 
 
-
     /*
     Assigns raw inputs on whichever joystick you're using into buttons we use to control the robot.
     Feel free to change the names if you decide to change the controller to a non-PS4 controller for clarity sake.
-    Check Driver Station for buttonNumbers.
+    Check Driver Station for buttonNumbers, they'll be in the USB order tab.
     */
     Trigger X1 = new JoystickButton(driverJoystick, 1);
     Trigger O2 = new JoystickButton(driverJoystick, 2);

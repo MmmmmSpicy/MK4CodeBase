@@ -5,10 +5,14 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 
+
+//Make sure that every single one of these variables are correct before troubleshooting the robot further! 
+    
+
 public final class Constants {
 
     public static final class ModuleConstants {
-        
+
         public static final double kWheelDiameterMeters = Units.inchesToMeters(4);
         public static final double kDriveMotorGearRatio = 1 / 5.56;
         public static final double kTurningMotorGearRatio = 1 / 12.8;
