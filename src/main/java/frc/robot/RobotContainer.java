@@ -1,12 +1,6 @@
 package frc.robot;
 
-import org.photonvision.PhotonCamera;
-
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
-
 import edu.wpi.first.wpilibj2.command.Command;
-
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -15,47 +9,41 @@ import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import frc.robot.Constants.OIConstants;
+
+import frc.robot.subsystems.SwerveSubsystem;
+
 import frc.robot.commands.SwerveJoystickCmd;
-import frc.robot.commands.VisionandIntake;
-import frc.robot.commands.climb.ClimberMove;
-import frc.robot.commands.climb.LeftClimberMove;
-import frc.robot.commands.climb.RightClimberMove;
-import frc.robot.commands.climb.ZeroClimber;
-import frc.robot.commands.climb.ZeroLeftClimber;
-import frc.robot.commands.climb.ZeroRightClimber;
-import frc.robot.commands.intake.Extake;
-import frc.robot.commands.intake.SpinIntake;
-import frc.robot.commands.shooter.ShootAmp;
-import frc.robot.commands.shooter.ShootCommand;
-import frc.robot.commands.shooter.ShooterBreak;
-import frc.robot.commands.shooter.ShooterCoast;
-import frc.robot.commands.ResyncEncoders;
-import frc.robot.commands.AmpVision;
 import frc.robot.commands.RedoOffsets;
 import frc.robot.commands.ResetHeading;
-import frc.robot.subsystems.ClimbSubsystem;
-import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.commands.ResyncEncoders;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 public class RobotContainer {
  
+    /*
+    "Imports" subsystems that you make in the subsystem folder to be used for controller actions.
+    Make sure you actually import the subsystem in the same manner as we do with the SwerveSubsystem above.
+    */
     private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
-    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-    private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
-    private final ClimbSubsystem climbSubsystem = new ClimbSubsystem();
 
-    private final Joystick driverJoystick = new Joystick(OIConstants.kDriverControllerPort);
-    private final Joystick driverstationTop = new Joystick(OIConstants.kTopHalfButtonBoardPort);
-    private final Joystick driverstationBottom = new Joystick(OIConstants.kBottomHalfButtonBoardPort);
+    // Sets the Joystick/Physical Driver Station ports, change port order in Driver Station to the numbers below.
+    private final Joystick driverJoystick = new Joystick(OIConstants.kDriverControllerPort); // 0
+    private final Joystick driverstationTop = new Joystick(OIConstants.kTopHalfButtonBoardPort); // 1
+    private final Joystick driverstationBottom = new Joystick(OIConstants.kBottomHalfButtonBoardPort); // 2
     // private final Joystick debug_secondary = new Joystick(4);
 
+    // Sends a dropdown for us to choose an auto in the Dashboard.
     private final SendableChooser<Command> autoChooser;
 
-    private final PhotonCamera RedvisionCamera = new PhotonCamera("Life_Cam_Red");
-    private final PhotonCamera BluevisionCamera = new PhotonCamera("Life_Cam_Blue");
 
 
+    /*
+    Assigns raw inputs on whichever joystick you're using into buttons we use to control the robot.
+    Feel free to change the names if you decide to change the controller to a non-PS4 controller for clarity sake.
+    Check Driver Station for buttonNumbers.
+    */
     Trigger X1 = new JoystickButton(driverJoystick, 1);
     Trigger O2 = new JoystickButton(driverJoystick, 2);
     Trigger Square3 = new JoystickButton(driverJoystick, 3);
@@ -64,8 +52,6 @@ public class RobotContainer {
     Trigger rightShoulder6 = new JoystickButton(driverJoystick, 6);
     Trigger leftTrigger7 = new JoystickButton(driverJoystick, 7);
     Trigger rightTrigger8 = new JoystickButton(driverJoystick, 8);
-    // Trigger leftTrigger7 = new JoystickButton(driverJoystick, 7);
-    // Trigger rightTrigger8 = new JoystickButton(driverJoystick, 8);
     Trigger leftStickPress9 = new JoystickButton(driverJoystick, 9);
     Trigger rightStickPress10 = new JoystickButton(driverJoystick, 10);
     
@@ -103,6 +89,10 @@ public class RobotContainer {
     public RobotContainer() {
         swerveSubsystem.setDefaultCommand(new SwerveJoystickCmd(
                 swerveSubsystem,
+                /* 
+                In teleop, if the robot is moving opposite of the way the joystick is being moved, change one of these
+                negatives to a positive depending on how it's inverted.
+                */
                 () -> -driverJoystick.getRawAxis(OIConstants.kDriverYAxis),
                 () -> -driverJoystick.getRawAxis(OIConstants.kDriverXAxis),
                 () -> -driverJoystick.getRawAxis(OIConstants.kDriverRotAxis),
@@ -110,67 +100,65 @@ public class RobotContainer {
 
         configureButtonBindings();
         
-        NamedCommands.registerCommand("SpinIntake", new SpinIntake(intakeSubsystem, shooterSubsystem, 0.5));
-        NamedCommands.registerCommand("SpinIntake2", new SpinIntake(intakeSubsystem, shooterSubsystem, 0.5));
-        NamedCommands.registerCommand("ExtakeAuto", new Extake(intakeSubsystem, shooterSubsystem, -0.5));
-        NamedCommands.registerCommand("ShootCommand", new ShootCommand(shooterSubsystem, 1));
+        // Use this line to add commands to PathPlanner, make sure to get spelling correct.
         NamedCommands.registerCommand("ResetHeading", new ResetHeading(swerveSubsystem));
-        NamedCommands.registerCommand("ResyncEncoders", new ResyncEncoders(swerveSubsystem));
-        NamedCommands.registerCommand("ShooterCoast", new ShooterCoast(shooterSubsystem));
-        NamedCommands.registerCommand("ShooterBrake", new ShooterBreak(shooterSubsystem));
-        NamedCommands.registerCommand("Vision", new VisionandIntake(swerveSubsystem, intakeSubsystem, shooterSubsystem, () -> BluevisionCamera.getLatestResult(), true));
-
+        
         // Build an auto chooser. This will use Commands.none() as the default option.
         autoChooser = AutoBuilder.buildAutoChooser();
 
-        // Another option that allows you to specify the default auto by its name
-        // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
-
+        // Sends a dropdown for us to choose an auto in the Dashboard.
         SmartDashboard.putData("Auto Chooser", autoChooser);
   }
   
 
     private void configureButtonBindings() {
+        /* 
+        Used to set all Button Bindings as the name suggests, excluding moving the robot with the joystick,
+        which is set with the Command Scheduler.
+        */
 
-        X1.whileTrue(new Extake(intakeSubsystem, shooterSubsystem, -0.5));
-        //O2.whileTrue(new ShootCommand(shooterSubsystem)); 
-        //Square3.onTrue(new PivotToPositionPID(pivotSubsystem, 0));
-        Triangle4.onTrue(new ResetHeading(swerveSubsystem));
-        // leftShoulder5.whileTrue(new VisionandIntake(swerveSubsystem, intakeSubsystem, shooterSubsystem, () -> BluevisionCamera.getLatestResult(), true));
-        rightShoulder6.whileTrue(new ShootAmp(shooterSubsystem, 0.27));
-        leftTrigger7.whileTrue(new ShootCommand(shooterSubsystem, 1));
-        rightTrigger8.whileTrue(new SpinIntake(intakeSubsystem, shooterSubsystem, 0.80));
-        leftStickPress9.onTrue(new ResyncEncoders(swerveSubsystem));
-        // rightStickPress10.onTrue(new ResetHeading(swerveSubsystem));
-        dPadNorth.whileTrue(new AmpVision(swerveSubsystem, () -> RedvisionCamera.getLatestResult(), true));
+        X1.onTrue(new ResetHeading(swerveSubsystem));
+        O2.onTrue(new ResyncEncoders(swerveSubsystem)); 
+        Square3.onTrue(new RedoOffsets(swerveSubsystem));
+        // Triangle4.onTrue(new));
+        // leftShoulder5.whileTrue(new));
+        // rightShoulder6.whileTrue(new));
+        // leftTrigger7.whileTrue(new));
+        // rightTrigger8.whileTrue(new));
+        // leftStickPress9.onTrue(new));
+        // rightStickPress10.onTrue(new));
+        // dPadNorth.whileTrue(new));
+        // dPadEast.whileTrue(new));
+        // dPadSouth.whileTrue(new));
+        // dPadWest.whileTrue(new));
 
-        buttonT1.whileTrue(new LeftClimberMove(climbSubsystem, 1));
-        buttonT2.whileTrue(new ClimberMove(climbSubsystem, 1)); 
-        buttonT3.whileTrue(new RightClimberMove(climbSubsystem, 1));
-        buttonT4.onTrue(new ResyncEncoders(swerveSubsystem));
-        buttonT5.onTrue(new ResetHeading(swerveSubsystem));
-        buttonT6.whileTrue(new ZeroLeftClimber(climbSubsystem));
-        buttonT7.whileTrue(new ZeroClimber(climbSubsystem));
-        buttonT8.whileTrue(new ZeroRightClimber(climbSubsystem));
-        //buttonT9.whileTrue(new Extake(intakeSubsystem, shooterSubsystem, -0.5));
-        //buttonT10.onTrue(new ResetHeading(swerveSubsystem));
+        // buttonT1.whileTrue(new );
+        // buttonT2.whileTrue(new ); 
+        // buttonT3.whileTrue(new );
+        // buttonT4.onTrue(new);
+        // buttonT5.onTrue(new);
+        // buttonT6.whileTrue(new);
+        // buttonT7.whileTrue(new);
+        // buttonT8.whileTrue(new);
+        // buttonT9.whileTrue(new);
+        // buttonT10.onTrue(new);
 
-        buttonB1.whileTrue(new LeftClimberMove(climbSubsystem, -1));
-        buttonB2.whileTrue(new ClimberMove(climbSubsystem, -1));
-        buttonB3.whileTrue(new RightClimberMove(climbSubsystem, -1));
-        // buttonB4.whileTrue(new SpinIntake(intakeSubsystem, shooterSubsystem, 0.5));
-        buttonB5.whileTrue(new ShootCommand(shooterSubsystem, 0.27));
-        buttonB6.onTrue(new RedoOffsets(swerveSubsystem));
+        // buttonB1.whileTrue(new);
+        // buttonB2.whileTrue(new);
+        // buttonB3.whileTrue(new);
+        // buttonB4.whileTrue(new);
+        // buttonB5.whileTrue(new);
+        // buttonB6.onTrue(new);
         // buttonB6.onTrue(new));
         // buttonB7.onTrue(new));
         // buttonB8.onTrue(new));
-        // buttonB8.whileTrue(new RightClimberMove(climbSubsystem, -0.5));
-        buttonB9.whileTrue(new SpinIntake(intakeSubsystem, shooterSubsystem, 0.5));
-        buttonB10.whileTrue(new Extake(intakeSubsystem, shooterSubsystem, -0.5));
+        // buttonB8.whileTrue(new);
+        // buttonB9.whileTrue(new);
+        // buttonB10.whileTrue(new);
 
-        // buttonD7.whileTrue(new ManualPivot(pivotSubsystem,() -> debug_secondary.getRawAxis(OIConstants.kDriverYAxis)));
-        // buttonD8.whileTrue(new PivotToPosition(pivotSubsystem, 20));
-        // buttonD9.whileTrue(new PivotToPosition(pivotSubsystem, -20));
+        // // buttonD7.whileTrue(new);
+        // // buttonD8.whileTrue(new);
+        // // buttonD9.whileTrue(new);
     }
 
     public Command getAutonomousCommand() {
